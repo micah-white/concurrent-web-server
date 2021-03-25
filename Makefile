@@ -23,7 +23,7 @@ spin.cgi: spin.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 test: wserver
-	./wserver -p 3000
+	./wserver -p 10000
 
 clean:
 	-rm -f $(OBJS) wserver wclient spin.cgi
