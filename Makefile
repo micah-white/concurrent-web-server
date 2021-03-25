@@ -22,5 +22,8 @@ spin.cgi: spin.c
 .c.o:
 	$(CC) $(CFLAGS) -o $@ -c $<
 
+test: wserver
+	./wserver -p 3000
+
 clean:
 	-rm -f $(OBJS) wserver wclient spin.cgi
