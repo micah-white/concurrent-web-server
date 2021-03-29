@@ -3,7 +3,7 @@
 # To remove files, type "make clean"
 
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -pthread
 OBJS = wserver.o wclient.o request.o io_helper.o 
 
 .SUFFIXES: .c .o 
@@ -23,7 +23,7 @@ spin.cgi: spin.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 test: wserver
-	./wserver -p 10000
+	./wserver
 
 clean:
 	-rm -f $(OBJS) wserver wclient spin.cgi

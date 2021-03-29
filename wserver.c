@@ -1,8 +1,16 @@
 #include <stdio.h>
+#include <pthread.h>
 #include "request.h"
 #include "io_helper.h"
 
 char default_root[] = ".";
+
+typedef struct {
+	int listen_fd;
+	struct sockaddr_in client_addr;
+} thread_arg;
+
+void* thread(void*);
 
 //
 // ./wserver [-d basedir] [-p port] [-t threads] [-b buffers] [-s schedalg]
@@ -55,14 +63,27 @@ int main(int argc, char *argv[]) {
 
     // now, get to work
     int listen_fd = open_listen_fd_or_die(port);
-    while (1) {
+    // while (1) {
 		struct sockaddr_in client_addr;
-		int client_len = sizeof(client_addr);
-		int conn_fd = accept_or_die(listen_fd, (sockaddr_t *) &client_addr, (socklen_t *) &client_len);
-		request_handle(conn_fd);
-		close_or_die(conn_fd);
-    }
+		thread_arg* arg = (thread_arg*) malloc(sizeof(thread_arg));
+		arg->client_addr = client_addr;
+		arg->listen_fd = listen_fd;
+		pthread_t thread_id;
+		pthread_create(&thread_id, NULL, thread, arg);
+		pthread_join(thread_id, NULL);
+		// int client_len = sizeof(client_addr);
+		// int conn_fd = accept_or_die(listen_fd, (sockaddr_t *) &client_addr, (socklen_t *) &client_len);
+		// request_handle(conn_fd);
+		// close_or_die(conn_fd);
+    // }
     return 0;
 }
 
-void thread()
+void* thread(void* a){
+	thread_arg* arg = (thread_arg*) a;
+	int client_len = sizeof(arg->client_addr);
+	int conn_fd = accept_or_die(arg->listen_fd, (sockaddr_t *) &(arg->client_addr), (socklen_t *) &client_len);
+	request_handle(conn_fd);
+	close_or_die(conn_fd);
+	return NULL;
+}
