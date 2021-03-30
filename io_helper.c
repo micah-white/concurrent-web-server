@@ -79,5 +79,3 @@ int open_listen_fd(int port) {
     }
     return listen_fd;
 }
-
-

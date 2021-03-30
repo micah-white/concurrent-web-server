@@ -3,8 +3,8 @@
 # To remove files, type "make clean"
 
 CC = gcc
-CFLAGS = -Wall -pthread
-OBJS = wserver.o wclient.o request.o io_helper.o 
+CFLAGS = -Wall -pthread -std=c99
+OBJS = wserver.o wclient.o request.o io_helper.o bst.o gst.o tnode.o rbt.o queue.o cda.o
 
 .SUFFIXES: .c .o 
 
