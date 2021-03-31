@@ -3,18 +3,18 @@
 #include "request.h"
 #include "io_helper.h"
 #include "cda.h"
+#include "integer.h"
 
 
 char default_root[] = ".";
 
 typedef struct {
 	CDA* buffer;
-	int schedulingPolicy;
-
 	
 } thread_arg;
 
 void* thread(void*);
+int binarySearch(CDA* items, int key);
 
 //
 // ./wserver [-d basedir] [-p port] [-t threads] [-b buffers] [-s schedalg]
@@ -67,24 +67,33 @@ int main(int argc, char *argv[]) {
 
     // now, get to work
     int listen_fd = open_listen_fd_or_die(port);
-
+	CDA* buffer = newCDA();
 	pthread_t threads[numThreads];
 	thread_arg* arg = (thread_arg*) malloc(sizeof(thread_arg));
-	for(int i = 0; i < numThreads; i++){
-		pthread_create(threads[i], NULL, thread, arg);
-	}
+	// for(int i = 0; i < numThreads; i++){
+	// 	pthread_create(&threads[i], NULL, thread, arg);
+	// }
+
+	insertCDAback(buffer,newINTEGER(1));
+	insertCDAback(buffer,newINTEGER(2));
+	insertCDAback(buffer,newINTEGER(3));
+	insertCDAback(buffer,newINTEGER(4));
+	insertCDAback(buffer,newINTEGER(5));
+	insertCDAback(buffer,newINTEGER(5));
+
+	printf("3 %d, 1 %d, 5 %d, 4 %d\n", binarySearch(buffer, 3), binarySearch(buffer, 1), binarySearch(buffer, 5), binarySearch(buffer, 4));
     // while (1) {
-		struct sockaddr_in client_addr;
-		
-		// arg->client_addr = client_addr;
-		// arg->listen_fd = listen_fd;
-		pthread_t thread_id;
-		pthread_create(&thread_id, NULL, thread, arg);
-		pthread_join(thread_id, NULL);
-		// int client_len = sizeof(client_addr);
-		// int conn_fd = accept_or_die(listen_fd, (sockaddr_t *) &client_addr, (socklen_t *) &client_len);
-		// request_handle(conn_fd);
-		// close_or_die(conn_fd);
+	// 	struct sockaddr_in client_addr;
+	// 	int client_len = sizeof(client_addr);
+	// 	int conn_fd = accept_or_die(listen_fd, (sockaddr_t *) &client_addr, (socklen_t *) &client_len);
+	// 	INTEGER* fd = newINTEGER(conn_fd);
+	// 	if(schedulingAlgorithm == 0) //FIFO
+	// 		insertCDAback(buffer, fd);
+	// 	else{ //SFF
+
+	// 	}
+	// 	// request_handle(conn_fd);
+	// 	// close_or_die(conn_fd);
     // }
     return 0;
 }
@@ -92,4 +101,54 @@ int main(int argc, char *argv[]) {
 void* thread(void* a){
 	thread_arg* arg = (thread_arg*) a;
 	
+}
+
+int binarySearch(CDA* items, int key){
+	int length = sizeCDA(items);
+	int guess = length;
+	int oldGuess = 0;
+	while(oldGuess != guess){
+		if(getINTEGER((INTEGER*) getCDA(items, guess)) == key){
+			oldGuess = guess;
+			//break tie by age of request so that requests are less likely to starve
+			if(++guess == length){
+				break;
+			}
+		}
+		else if(getINTEGER((INTEGER*) getCDA(items, guess)) > key){
+			if(guess - oldGuess == 1)
+				break;
+			if(oldGuess-guess == 1)
+				oldGuess = guess--;
+			else if(guess > oldGuess){
+				int temp = guess;
+				guess = oldGuess + (guess-oldGuess)/2;
+				oldGuess = temp;
+			}
+			else{
+				int temp = guess;
+				guess += (oldGuess-guess)/2;
+				oldGuess = temp;
+			}
+		}
+		else{
+			if(oldGuess - guess == 1){
+				oldGuess = guess++;
+				break;
+			}
+			if(guess - oldGuess == 1)
+				break;
+			else if(guess > oldGuess){
+				int temp = guess;
+				guess = oldGuess + (guess-oldGuess)/2;
+				oldGuess = temp;
+			}
+			else{
+				int temp = guess;
+				guess -= (oldGuess-guess)/2;
+				oldGuess = temp;
+			}
+		}
+	}
+	return guess;
 }
