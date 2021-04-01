@@ -11,7 +11,9 @@ char default_root[] = ".";
 
 typedef struct {
 	CDA* buffer;
-	
+	pthread_mutex_t* bufferMutex;
+	pthread_cond_t* emptyBuffer;
+	pthread_cond_t* fullBuffer;
 } thread_arg;
 
 void* thread(void*);
@@ -67,49 +69,46 @@ int main(int argc, char *argv[]) {
 
     // now, get to work
     int listen_fd = open_listen_fd_or_die(port);
+	/*
+		Use circular dynamic array for storing file descriptors
+		Useful for FIFO because insertions and removals are amortized constant
+		For SFF removals are still amortized constant, but insertions are linear b/c of shifting
+		I don't expect the buffer size to ever become big enough for this to be a problem
+	*/
 	CDA* buffer = newCDA();
 	setCDAdisplay(buffer, displayINTEGER);
+	//initializing pthread stuff
+	pthread_mutex_t bufferMutex;
+	if(pthread_mutex_init(&bufferMutex, NULL) != 0){
+		printf("mutex failed to be created\n");
+		exit(1);
+	}
 	pthread_t threads[numThreads];
+	pthread_cond_t emptyBuffer = PTHREAD_COND_INITIALIZER;
+	pthread_cond_t fullBuffer = PTHREAD_COND_INITIALIZER;
+	//initializing arg
 	thread_arg* arg = (thread_arg*) malloc(sizeof(thread_arg));
-	// for(int i = 0; i < numThreads; i++){
-	// 	pthread_create(&threads[i], NULL, thread, arg);
-	// }
+	arg->buffer = buffer;
+	arg->bufferMutex = &bufferMutex;
+	arg->emptyBuffer = &emptyBuffer;
+	arg->fullBuffer = &fullBuffer;
+	//starting threads
+	for(int i = 0; i < numThreads; i++){
+		pthread_create(&threads[i], NULL, thread, arg);
+	}
 
-	
-	// insertCDAback(buffer,newINTEGER(6));
-	// insertCDAback(buffer,newINTEGER(6));
-	// insertCDAback(buffer,newINTEGER(6));
-	// insertCDAback(buffer,newINTEGER(6));
-	// insertCDAback(buffer,newINTEGER(6));
-	// for(int i = 7; i <= 100; i++){
-	// 	insertCDAback(buffer, newINTEGER(i));
-	// }
-	
-	// for(int i = 0; i <= 100; i++){
-	// 	if(binarySearch(buffer, i) != i)
-	// 		printf("\n prob \n");
-	// }
-
-	// binarySearch(buffer, 7);
-
-	// printf("\n\n");
-	
-	// printf("3 %d, 1 %d, 5 %d, 4 %d\n", binarySearch(buffer, 3), binarySearch(buffer, 1), binarySearch(buffer, 5), binarySearch(buffer, 4));
-    for(int i = 0; i < 25; i++){
-	// while (1) {
+	while (1) {
 		struct sockaddr_in client_addr;
 		int client_len = sizeof(client_addr);
-		// int conn_fd = accept_or_die(listen_fd, (sockaddr_t *) &client_addr, (socklen_t *) &client_len);
-		int conn_fd = rand()%1000;
+		int conn_fd = accept_or_die(listen_fd, (sockaddr_t *) &client_addr, (socklen_t *) &client_len);
 		INTEGER* fd = newINTEGER(conn_fd);
+		//inserting into array
+		pthread_mutex_lock(&bufferMutex);
 		if(schedulingAlgorithm == 0) //FIFO
 			insertCDAback(buffer, fd);
-		else{ //SFF
+		else //SFF
 			insertCDA(buffer, binarySearch(buffer, conn_fd), fd);
-		}
-		// displayCDA(buffer, stdout); printf("\n");
-		// request_handle(conn_fd);
-		// close_or_die(conn_fd);
+		pthread_mutex_unlock(&bufferMutex);
     }
 	// displayCDA(buffer, stdout);
     return 0;
@@ -117,6 +116,13 @@ int main(int argc, char *argv[]) {
 
 void* thread(void* a){
 	thread_arg* arg = (thread_arg*) a;
+	
+	pthread_mutex_lock(arg->bufferMutex);
+	int conn_fd = getINTEGER((INTEGER*) removeCDAfront(arg->buffer));
+	pthread_mutex_unlock(arg->bufferMutex);
+	request_handle(conn_fd);
+	close_or_die(conn_fd);
+	
 	return NULL;
 }
 
