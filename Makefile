@@ -7,7 +7,7 @@ CFLAGS = -Wall -pthread
 OBJS = wserver.o wclient.o request.o io_helper.o cda.o integer.o
 OOPTS = -Wall -Wextra -g -c
 EXEC_FLAGS = -s SFF -b 10 -t 4
-CLIENT_ARGS = localhost 10000 /spin.cgi
+CLIENT_ARGS = localhost 10000 /spin.cgi?2
 
 .SUFFIXES: .c .o 
 
@@ -39,3 +39,4 @@ integer.o : integer.c integer.h
 
 clean:
 	-rm -f $(OBJS) wserver wclient spin.cgi
+

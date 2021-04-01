@@ -25,13 +25,20 @@ int main(int argc, char *argv[]) {
     // Extract arguments
     double spin_for = 3.0;
     char *buf;
-    // if ((buf = getenv("QUERY_STRING")) != NULL) {
-	// // just expecting a single number
+    if ((buf = getenv("QUERY_STRING")) != NULL) {
+	// just expecting a single number
     
-	// spin_for = (double) atoi(buf);
-    // printf("we gonna SPIN %f \"%s\"\n", spin_for, buf);
-    // }
+	spin_for = (double) atoi(buf);
+    printf("we gonna SPIN %f \"%s\"\n", spin_for, buf);
+    }
+    char* id;
 
+    if(argc == 1)
+        id = argv[1];
+    else{
+        id = malloc(sizeof(char) * 2);
+        strcpy(id, "x");
+    }
     double t1 = get_seconds();
     while ((get_seconds() - t1) < spin_for)
 	sleep(1);
@@ -41,7 +48,8 @@ int main(int argc, char *argv[]) {
     char content[MAXBUF];
     sprintf(content, "<p>Welcome to the CGI program (%s)</p>\r\n", buf);
     sprintf(content, "%s<p>My only purpose is to waste time on the server!</p>\r\n", content);
-    sprintf(content, "%s<p>I spun for %.2f seconds</p>\r\n", content, t2 - t1);
+    sprintf(content, "%s<p>ID: %s spun for %.2f seconds</p>\r\n", id, content, t2 - t1);
+    
     
     /* Generate the HTTP response */
     printf("Content-length: %lu\r\n", strlen(content));

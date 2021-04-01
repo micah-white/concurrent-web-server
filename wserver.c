@@ -94,10 +94,8 @@ int main(int argc, char *argv[]) {
 	arg->emptyBuffer = &emptyBuffer;
 	arg->fullBuffer = &fullBuffer;
 	//starting threads
-	for(int i = 0; i < numThreads; i++){
-		printf("new thread!\n");
+	for(int i = 0; i < numThreads; i++)
 		pthread_create(&threads[i], NULL, thread, arg);
-	}
 
 	while (1) {
 		struct sockaddr_in client_addr;
