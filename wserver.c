@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
 	*/
 	CDA* buffer = newCDA();
 	setCDAdisplay(buffer, displayINTEGER);
+	setCDAfree(buffer, freeINTEGER);
 	//initializing pthread stuff
 	pthread_mutex_t bufferMutex;
 	if(pthread_mutex_init(&bufferMutex, NULL) != 0){
@@ -100,14 +101,20 @@ int main(int argc, char *argv[]) {
 	while (1) {
 		struct sockaddr_in client_addr;
 		int client_len = sizeof(client_addr);
+		printf("hi\n");
 		int conn_fd = accept_or_die(listen_fd, (sockaddr_t *) &client_addr, (socklen_t *) &client_len);
 		INTEGER* fd = newINTEGER(conn_fd);
 		//inserting into array
+		printf("we get this far\n");
 		pthread_mutex_lock(&bufferMutex);
+		while(sizeCDA(buffer) == bufferSize)
+			pthread_cond_wait(&fullBuffer, &bufferMutex);
 		if(schedulingAlgorithm == 0) //FIFO
 			insertCDAback(buffer, fd);
 		else //SFF
 			insertCDA(buffer, binarySearch(buffer, conn_fd), fd);
+		pthread_cond_signal(&emptyBuffer);
+		printf("insetion done\n");
 		pthread_mutex_unlock(&bufferMutex);
     }
 	// displayCDA(buffer, stdout);
@@ -118,11 +125,17 @@ void* thread(void* a){
 	thread_arg* arg = (thread_arg*) a;
 	
 	pthread_mutex_lock(arg->bufferMutex);
-	int conn_fd = getINTEGER((INTEGER*) removeCDAfront(arg->buffer));
+	while(sizeCDA(arg->buffer) == 0)
+		pthread_cond_wait(arg->emptyBuffer, arg->bufferMutex);
+	INTEGER* tempInt= (INTEGER*) removeCDAfront(arg->buffer);
+	pthread_cond_signal(arg->fullBuffer);
 	pthread_mutex_unlock(arg->bufferMutex);
+
+	int conn_fd = getINTEGER(tempInt);
 	request_handle(conn_fd);
 	close_or_die(conn_fd);
-	
+
+	freeINTEGER(tempInt);
 	return NULL;
 }
 
