@@ -123,19 +123,20 @@ int main(int argc, char *argv[]) {
 
 void* thread(void* a){
 	thread_arg* arg = (thread_arg*) a;
-	
-	pthread_mutex_lock(arg->bufferMutex);
-	while(sizeCDA(arg->buffer) == 0)
-		pthread_cond_wait(arg->emptyBuffer, arg->bufferMutex);
-	INTEGER* tempInt= (INTEGER*) removeCDAfront(arg->buffer);
-	pthread_cond_signal(arg->fullBuffer);
-	pthread_mutex_unlock(arg->bufferMutex);
+	while(1){
+		pthread_mutex_lock(arg->bufferMutex);
+		while(sizeCDA(arg->buffer) == 0)
+			pthread_cond_wait(arg->emptyBuffer, arg->bufferMutex);
+		INTEGER* tempInt= (INTEGER*) removeCDAfront(arg->buffer);
+		pthread_cond_signal(arg->fullBuffer);
+		pthread_mutex_unlock(arg->bufferMutex);
 
-	int conn_fd = getINTEGER(tempInt);
-	request_handle(conn_fd);
-	close_or_die(conn_fd);
+		int conn_fd = getINTEGER(tempInt);
+		request_handle(conn_fd);
+		close_or_die(conn_fd);
 
-	freeINTEGER(tempInt);
+		freeINTEGER(tempInt);
+	}
 	return NULL;
 }
 

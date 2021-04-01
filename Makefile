@@ -7,6 +7,7 @@ CFLAGS = -Wall -pthread
 OBJS = wserver.o wclient.o request.o io_helper.o cda.o integer.o
 OOPTS = -Wall -Wextra -g -c
 EXEC_FLAGS = -s SFF
+CLIENT_ARGS = localhost 10000 /README.md
 
 .SUFFIXES: .c .o 
 
@@ -24,8 +25,11 @@ spin.cgi: spin.c
 .c.o:
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-test: wserver
+server: wserver
 	./wserver $(EXEC_FLAGS)
+
+client: wclient
+	./wclient $(CLIENT_ARGS)
 
 cda.o : cda.c cda.h
 		gcc $(OOPTS) cda.c
