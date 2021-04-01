@@ -6,8 +6,8 @@ CC = gcc
 CFLAGS = -Wall -pthread
 OBJS = wserver.o wclient.o request.o io_helper.o cda.o integer.o
 OOPTS = -Wall -Wextra -g -c
-EXEC_FLAGS = -s SFF
-CLIENT_ARGS = localhost 10000 /README.md
+EXEC_FLAGS = -s SFF -b 10 -t 4
+CLIENT_ARGS = localhost 10000 /spin.cgi
 
 .SUFFIXES: .c .o 
 

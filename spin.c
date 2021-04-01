@@ -23,12 +23,14 @@ double get_seconds() {
 
 int main(int argc, char *argv[]) {
     // Extract arguments
-    double spin_for = 0.0;
+    double spin_for = 3.0;
     char *buf;
-    if ((buf = getenv("QUERY_STRING")) != NULL) {
-	// just expecting a single number
-	spin_for = (double) atoi(buf);
-    }
+    // if ((buf = getenv("QUERY_STRING")) != NULL) {
+	// // just expecting a single number
+    
+	// spin_for = (double) atoi(buf);
+    // printf("we gonna SPIN %f \"%s\"\n", spin_for, buf);
+    // }
 
     double t1 = get_seconds();
     while ((get_seconds() - t1) < spin_for)

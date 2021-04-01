@@ -95,17 +95,18 @@ int main(int argc, char *argv[]) {
 	arg->fullBuffer = &fullBuffer;
 	//starting threads
 	for(int i = 0; i < numThreads; i++){
+		printf("new thread!\n");
 		pthread_create(&threads[i], NULL, thread, arg);
 	}
 
 	while (1) {
 		struct sockaddr_in client_addr;
 		int client_len = sizeof(client_addr);
-		printf("hi\n");
+		// printf("hi\n");
 		int conn_fd = accept_or_die(listen_fd, (sockaddr_t *) &client_addr, (socklen_t *) &client_len);
 		INTEGER* fd = newINTEGER(conn_fd);
 		//inserting into array
-		printf("we get this far\n");
+		// printf("we get this far\n");
 		pthread_mutex_lock(&bufferMutex);
 		while(sizeCDA(buffer) == bufferSize)
 			pthread_cond_wait(&fullBuffer, &bufferMutex);
@@ -114,7 +115,7 @@ int main(int argc, char *argv[]) {
 		else //SFF
 			insertCDA(buffer, binarySearch(buffer, conn_fd), fd);
 		pthread_cond_signal(&emptyBuffer);
-		printf("insetion done\n");
+		// printf("insetion done\n");
 		pthread_mutex_unlock(&bufferMutex);
     }
 	// displayCDA(buffer, stdout);
