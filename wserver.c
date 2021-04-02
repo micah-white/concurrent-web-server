@@ -100,11 +100,9 @@ int main(int argc, char *argv[]) {
 	while (1) {
 		struct sockaddr_in client_addr;
 		int client_len = sizeof(client_addr);
-		// printf("hi\n");
 		int conn_fd = accept_or_die(listen_fd, (sockaddr_t *) &client_addr, (socklen_t *) &client_len);
 		INTEGER* fd = newINTEGER(conn_fd);
 		//inserting into array
-		// printf("we get this far\n");
 		pthread_mutex_lock(&bufferMutex);
 		while(sizeCDA(buffer) == bufferSize)
 			pthread_cond_wait(&fullBuffer, &bufferMutex);
@@ -113,10 +111,9 @@ int main(int argc, char *argv[]) {
 		else //SFF
 			insertCDA(buffer, binarySearch(buffer, conn_fd), fd);
 		pthread_cond_signal(&emptyBuffer);
-		// printf("insetion done\n");
 		pthread_mutex_unlock(&bufferMutex);
     }
-	// displayCDA(buffer, stdout);
+
     return 0;
 }
 
@@ -146,11 +143,9 @@ int binarySearch(CDA* items, int key){
 	int guess = length/2;
 	int oldGuess = -1;
 	while(oldGuess != guess){
-		// printf("old: %d, guess: %d, key %d ", oldGuess, guess, key);
 		if(guess == length)
 			break;
 		if(getINTEGER((INTEGER*) getCDA(items, guess)) == key){
-			// printf("case 1\n");
 			oldGuess = guess;
 			//break tie by age of request so that requests are less likely to starve
 			if(++guess == length){
@@ -158,7 +153,6 @@ int binarySearch(CDA* items, int key){
 			}
 		}
 		else if(getINTEGER((INTEGER*) getCDA(items, guess)) > key){
-			// printf("case 2\n");
 			if(guess == 0)
 				break;
 			if(oldGuess == -1){
@@ -181,7 +175,6 @@ int binarySearch(CDA* items, int key){
 			}
 		}
 		else{
-			// printf("case 3\n");
 			if(oldGuess == -1){
 				guess = (length + guess)/2 + 1;
 				oldGuess = length/2;
@@ -206,6 +199,5 @@ int binarySearch(CDA* items, int key){
 			}
 		}
 	}
-	// printf("result: %d at %d\n", key, guess);
 	return guess;
 }
