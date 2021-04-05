@@ -3,9 +3,9 @@
 # To remove files, type "make clean"
 
 CC = gcc
-CFLAGS = -Wall -pthread
+CFLAGS = -Wall -pthread -std=gnu99
 OBJS = wserver.o wclient.o request.o io_helper.o cda.o integer.o
-OOPTS = -Wall -Wextra -g -c
+OOPTS = -Wall -Wextra -g -c -std=c99
 EXEC_FLAGS = -s SFF -b 2 -t 1
 CLIENT_ARGS = localhost 10000 /spin.cgi?2
 
